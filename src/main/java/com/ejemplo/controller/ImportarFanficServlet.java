@@ -29,7 +29,7 @@ public class ImportarFanficServlet extends HttpServlet {
     private final SchemaInitializer schemaInitializer = new SchemaInitializer();
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "UseSpecificCatch"})
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType("application/json;charset=UTF-8");
@@ -75,7 +75,6 @@ public class ImportarFanficServlet extends HttpServlet {
             error.put("mensaje", e.getMessage());
             response.getWriter().write(gson.toJson(error));
         } catch (Exception e) {
-            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
             Map<String, Object> error = new HashMap<>();
