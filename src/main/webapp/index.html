@@ -7,13 +7,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/estilos.css?v=3">
 </head>
 <body>
     <div class="page-glow page-glow--left"></div>
     <div class="page-glow page-glow--right"></div>
 
     <main class="layout">
+        <nav class="topbar shell">
+            <div class="topbar__brand">
+                <span class="topbar__dot"></span>
+                <div>
+                    <p class="eyebrow">AO3 Fanfic Tracker</p>
+                    <p class="topbar__sub">Tu archivo personal de lectura fanfic</p>
+                </div>
+            </div>
+            <div class="topbar__links">
+                <a href="#importar">Importar</a>
+                <a href="#biblioteca">Biblioteca</a>
+                <a href="#estadisticas">Estadisticas</a>
+            </div>
+        </nav>
+
         <header class="archive-banner">
             <div class="archive-banner__meta">
                 <p class="eyebrow">AO3 Fanfic Tracker</p>
@@ -34,6 +49,21 @@
                     Pega el link de un work de AO3, recoge sus metadatos principales y conviertelo en una
                     biblioteca bonita con parejas, fandoms, ratings y estadisticas.
                 </p>
+
+                <div class="hero-highlights">
+                    <article class="highlight-card">
+                        <p class="highlight-card__label">Importa</p>
+                        <p class="highlight-card__text">Titulo, autor, warnings, parejas, fandom, rating y words.</p>
+                    </article>
+                    <article class="highlight-card">
+                        <p class="highlight-card__label">Valora</p>
+                        <p class="highlight-card__text">Guarda cuando lo terminaste y tu puntuacion en estrellas.</p>
+                    </article>
+                    <article class="highlight-card">
+                        <p class="highlight-card__label">Descubre</p>
+                        <p class="highlight-card__text">Encuentra tus parejas, fandoms y categorias mas leidas.</p>
+                    </article>
+                </div>
             </div>
 
             <aside class="hero-note">
@@ -46,12 +76,13 @@
             </aside>
         </section>
 
-        <section class="panel shell">
+        <section class="panel shell" id="importar">
             <div class="panel-heading">
                 <div>
                     <p class="section-label">Import</p>
                     <h2>Importar fanfic</h2>
                 </div>
+                <p class="panel-copy">Pega un enlace publico de AO3 y deja que el tracker recoja los metadatos principales.</p>
             </div>
 
             <form id="formFanfic" class="grid-form">
@@ -82,7 +113,7 @@
             <div id="estado" class="estado"></div>
         </section>
 
-        <section class="panel shell">
+        <section class="panel shell" id="biblioteca">
             <div class="cabecera-seccion">
                 <div>
                     <p class="section-label">Archive</p>
@@ -93,7 +124,7 @@
             <div id="listaFanfics" class="lista-fanfics"></div>
         </section>
 
-        <section class="panel shell">
+        <section class="panel shell" id="estadisticas">
             <div class="cabecera-seccion">
                 <div>
                     <p class="section-label">Patterns</p>
@@ -103,8 +134,20 @@
             </div>
             <div id="stats" class="stats"></div>
         </section>
+
+        <footer class="footer shell">
+            <div>
+                <p class="footer__title">AO3 Fanfic Tracker</p>
+                <p class="footer__text">Diseño inspirado en la vibra de AO3 Rosé Pine Cool, adaptado a tu biblioteca personal.</p>
+            </div>
+            <div class="footer__chips">
+                <span>AO3 metadata</span>
+                <span>Reading stats</span>
+                <span>Personal archive</span>
+            </div>
+        </footer>
     </main>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=3"></script>
 </body>
 </html>

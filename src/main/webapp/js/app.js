@@ -57,7 +57,22 @@ async function cargarFanfics() {
         contadorFanfics.textContent = `${datos.fanfics.length} fanfic(s) guardado(s)`;
 
         if (datos.fanfics.length === 0) {
-            listaFanfics.innerHTML = '<div class="mensaje neutro">Todavia no has guardado ningun fanfic.</div>';
+            listaFanfics.innerHTML = `
+                <article class="empty-card">
+                    <p class="empty-card__eyebrow">Biblioteca vacia</p>
+                    <h3>Todavia no has guardado ningun fanfic</h3>
+                    <p>
+                        Empieza importando un enlace de AO3 para crear tu primera ficha. Cuando tengas varios,
+                        esta seccion empezara a sentirse como una biblioteca de verdad.
+                    </p>
+                    <div class="empty-card__chips">
+                        <span class="tag">Relationships</span>
+                        <span class="tag">Fandoms</span>
+                        <span class="tag">Warnings</span>
+                        <span class="tag">Rating</span>
+                    </div>
+                </article>
+            `;
             return;
         }
 
@@ -80,10 +95,14 @@ async function cargarEstadisticas() {
 
         if (!datos.enabled) {
             stats.innerHTML = `
-                <div class="mensaje neutro">
-                    <strong>${datos.totalFanfics}/10</strong> fanfics guardados.<br>
-                    ${datos.mensaje}
-                </div>
+                <article class="empty-card empty-card--stats">
+                    <p class="empty-card__eyebrow">Stats locked</p>
+                    <h3>${datos.totalFanfics}/10 fanfics guardados</h3>
+                    <p>${datos.mensaje}</p>
+                    <div class="progress">
+                        <span class="progress__bar" style="width: ${Math.min((datos.totalFanfics / 10) * 100, 100)}%"></span>
+                    </div>
+                </article>
             `;
             return;
         }
