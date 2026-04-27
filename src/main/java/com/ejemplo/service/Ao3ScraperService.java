@@ -2,12 +2,16 @@ package com.ejemplo.service;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
+import org.jsoup.HttpStatusException;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.Connection.Response;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -16,14 +20,11 @@ import com.ejemplo.model.Fanfic;
 public class Ao3ScraperService {
 
     private static final Pattern WORK_ID_PATTERN = Pattern.compile("/works/(\\d+)");
+    private static final int MAX_REINTENTOS = 3;
 
     public Fanfic extraerFanfic(String urlOriginal) {
         String urlNormalizada = normalizarUrl(urlOriginal);
-        Document documento = obtenerDocumento(urlNormalizada);
-
-        if (!paginaPareceWork(documento)) {
-            documento = obtenerDocumento(anadirVistaAdulta(urlNormalizada));
-        }
+        Document documento = obtenerDocumentoConFallback(urlNormalizada);
 
         Fanfic fanfic = new Fanfic();
         fanfic.setAo3Url(urlNormalizada);
@@ -69,15 +70,51 @@ public class Ao3ScraperService {
         return matcher.find() ? matcher.group(1) : null;
     }
 
-    private Document obtenerDocumento(String url) {
-        try {
-            return Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(15000)
-                    .get();
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo acceder a AO3", e);
+    private Document obtenerDocumentoConFallback(String urlNormalizada) {
+        List<String> urls = new ArrayList<>();
+        urls.add(urlNormalizada);
+        urls.add(anadirVistaAdulta(urlNormalizada));
+        urls.add(urlNormalizada + "?view_adult=true&view_full_work=true");
+
+        String ultimoMensaje = "No se pudo acceder a AO3";
+
+        for (String url : urls) {
+            for (int intento = 1; intento <= MAX_REINTENTOS; intento++) {
+                try {
+                    Document documento = obtenerDocumento(url);
+                    if (paginaPareceWork(documento)) {
+                        return documento;
+                    }
+                    ultimoMensaje = "AO3 devolvio una pagina sin los metadatos esperados";
+                } catch (HttpStatusException e) {
+                    ultimoMensaje = construirMensajeEstado(e);
+
+                    if (!esErrorReintentable(e.getStatusCode())) {
+                        throw new RuntimeException(ultimoMensaje, e);
+                    }
+                } catch (UnsupportedMimeTypeException e) {
+                    throw new RuntimeException("AO3 devolvio un tipo de contenido inesperado", e);
+                } catch (IOException e) {
+                    ultimoMensaje = "No se pudo acceder a AO3: " + e.getMessage();
+                }
+
+                esperarAntesDeReintentar(intento);
+            }
         }
+
+        throw new RuntimeException(ultimoMensaje);
+    }
+
+    private Document obtenerDocumento(String url) throws IOException {
+        Response response = Jsoup.connect(url)
+                .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36")
+                .header("Accept-Language", "es-ES,es;q=0.9,en;q=0.8")
+                .referrer("https://archiveofourown.org/")
+                .followRedirects(true)
+                .timeout(20000)
+                .execute();
+
+        return response.parse();
     }
 
     private boolean paginaPareceWork(Document documento) {
@@ -86,6 +123,29 @@ public class Ao3ScraperService {
 
     private String anadirVistaAdulta(String url) {
         return url + "?view_adult=true";
+    }
+
+    private boolean esErrorReintentable(int statusCode) {
+        return statusCode == 403 || statusCode == 429 || statusCode == 500 || statusCode == 502
+                || statusCode == 503 || statusCode == 504 || statusCode == 520 || statusCode == 521
+                || statusCode == 522 || statusCode == 523 || statusCode == 524 || statusCode == 525;
+    }
+
+    private String construirMensajeEstado(HttpStatusException e) {
+        if (e.getStatusCode() == 525) {
+            return "AO3 devolvio un error 525 de Cloudflare. Suele ser temporal y ocurre a veces con scrapers en servidores como Railway. Prueba otra vez en unos minutos.";
+        }
+
+        return "AO3 devolvio HTTP " + e.getStatusCode() + " al intentar leer el fanfic";
+    }
+
+    private void esperarAntesDeReintentar(int intento) {
+        try {
+            long pausa = 400L * intento;
+            Thread.sleep(pausa);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private String extraerTitulo(Document documento) {
