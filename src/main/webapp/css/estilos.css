@@ -489,6 +489,44 @@ body::before {
     gap: 16px;
 }
 
+.paginacion-fanfics {
+    margin-top: 18px;
+    position: relative;
+    z-index: 1;
+}
+
+.paginacion-fanfics__inner {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.paginacion-fanfics__boton {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(156, 207, 216, 0.28);
+    background: rgba(62, 143, 176, 0.14);
+    color: var(--foam);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.paginacion-fanfics__boton:hover {
+    transform: translateY(-1px);
+    background: rgba(62, 143, 176, 0.24);
+    box-shadow: 0 10px 24px rgba(62, 143, 176, 0.12);
+}
+
+.paginacion-fanfics__boton.is-active {
+    background: rgba(156, 207, 216, 0.22);
+    color: var(--text);
+    box-shadow: 0 0 0 1px rgba(156, 207, 216, 0.12) inset;
+}
+
 .fanfic-card {
     border: 1px solid rgba(144, 140, 170, 0.2);
     border-radius: 22px;

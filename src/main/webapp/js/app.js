@@ -1,5 +1,8 @@
 const state = {
-    user: null
+    user: null,
+    fanfics: [],
+    currentPage: 1,
+    fanficsPerPage: 5
 };
 
 const formFanfic = document.getElementById('formFanfic');
@@ -8,6 +11,7 @@ const finishedDateInput = document.getElementById('finishedDate');
 const userStarsInput = document.getElementById('userStars');
 const estado = document.getElementById('estado');
 const listaFanfics = document.getElementById('listaFanfics');
+const paginacionFanfics = document.getElementById('paginacionFanfics');
 const stats = document.getElementById('stats');
 const contadorFanfics = document.getElementById('contadorFanfics');
 const authStatus = document.getElementById('authStatus');
@@ -23,6 +27,7 @@ loginForm.addEventListener('submit', manejarLogin);
 formFanfic.addEventListener('submit', guardarFanfic);
 listaFanfics.addEventListener('click', manejarClicksBiblioteca);
 listaFanfics.addEventListener('submit', manejarEdicionFanfic);
+paginacionFanfics.addEventListener('click', manejarPaginacionBiblioteca);
 authStatus.addEventListener('click', manejarAccionesSesion);
 
 async function init() {
@@ -156,6 +161,7 @@ async function cargarBibliotecaCompleta() {
 
 async function cargarFanfics() {
     listaFanfics.innerHTML = '<div class="mensaje neutro">Cargando fanfics...</div>';
+    paginacionFanfics.innerHTML = '';
 
     try {
         const { response, data } = await solicitar('/api/fanfics');
@@ -165,8 +171,10 @@ async function cargarFanfics() {
         }
 
         contadorFanfics.textContent = `${data.fanfics.length} fanfic(s) guardado(s)`;
+        state.fanfics = data.fanfics;
 
         if (data.fanfics.length === 0) {
+            state.currentPage = 1;
             listaFanfics.innerHTML = `
                 <article class="empty-card">
                     <p class="empty-card__eyebrow">Biblioteca vacia</p>
@@ -183,12 +191,16 @@ async function cargarFanfics() {
                     </div>
                 </article>
             `;
+            paginacionFanfics.innerHTML = '';
             return;
         }
 
-        listaFanfics.innerHTML = data.fanfics.map(renderFanfic).join('');
+        const totalPages = Math.ceil(state.fanfics.length / state.fanficsPerPage);
+        state.currentPage = Math.min(state.currentPage, totalPages);
+        renderPaginaBiblioteca();
     } catch (error) {
         listaFanfics.innerHTML = `<div class="mensaje error">${escapeHtml(error.message)}</div>`;
+        paginacionFanfics.innerHTML = '';
     }
 }
 
@@ -237,6 +249,16 @@ function manejarClicksBiblioteca(evento) {
     if (deleteButton) {
         borrarFanfic(Number(deleteButton.dataset.fanficId));
     }
+}
+
+function manejarPaginacionBiblioteca(evento) {
+    const pageButton = evento.target.closest('[data-action="go-page"]');
+    if (!pageButton) {
+        return;
+    }
+
+    state.currentPage = Number(pageButton.dataset.page);
+    renderPaginaBiblioteca();
 }
 
 async function manejarEdicionFanfic(evento) {
@@ -313,6 +335,8 @@ function actualizarSesion(user) {
         `;
         contadorFanfics.textContent = '';
     } else {
+        state.fanfics = [];
+        state.currentPage = 1;
         authStatus.innerHTML = `
             <div class="session-pill">
                 <span class="session-pill__label">Estado</span>
@@ -320,9 +344,39 @@ function actualizarSesion(user) {
             </div>
         `;
         listaFanfics.innerHTML = '';
+        paginacionFanfics.innerHTML = '';
         stats.innerHTML = '';
         contadorFanfics.textContent = '';
     }
+}
+
+function renderPaginaBiblioteca() {
+    const start = (state.currentPage - 1) * state.fanficsPerPage;
+    const end = start + state.fanficsPerPage;
+    const paginaActual = state.fanfics.slice(start, end);
+    const totalPages = Math.ceil(state.fanfics.length / state.fanficsPerPage);
+
+    listaFanfics.innerHTML = paginaActual.map(renderFanfic).join('');
+    paginacionFanfics.innerHTML = totalPages > 1 ? renderPaginacion(totalPages) : '';
+}
+
+function renderPaginacion(totalPages) {
+    const botones = Array.from({ length: totalPages }, (_, index) => {
+        const page = index + 1;
+        const activeClass = page === state.currentPage ? ' is-active' : '';
+
+        return `
+            <button
+                class="paginacion-fanfics__boton${activeClass}"
+                type="button"
+                data-action="go-page"
+                data-page="${page}"
+                aria-label="Ir a la pagina ${page}"
+            >${page}</button>
+        `;
+    }).join('');
+
+    return `<div class="paginacion-fanfics__inner">${botones}</div>`;
 }
 
 function renderFanfic(fanfic) {
